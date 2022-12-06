@@ -1,0 +1,68 @@
+﻿@page "/"
+@using Blazored.Video
+@using HomeCinema.Data;
+@inject WeatherForecastService ForecastService
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+
+@*<BlazoredVideo class="w-100"
+	  style="max-width:800px;"
+	  controls="controls">
+	<source src="https://www.youtube.com/watch?v=Xu3FTEmN-eg&list=RDXu3FTEmN-eg&start_radio=1" type="video/mp4" />
+</BlazoredVideo>*@
+
+
+<style>
+	.container {
+					overflow-y: scroll;
+					height: calc(40vh);
+					border: 1px solid blue;
+	}
+	.even{
+					background-color: greenyellow;
+					height:40px;
+	}
+	.odd{
+					background-color: indianred;
+					height: 40px;
+	}
+</style>
+
+<div class="container">
+
+	<Virtualize Context="forecast" ItemsProvider="@LoadForecasts" ItemSize="40" OverscanCount="4">
+		<ItemContent>
+			<p class="@(forecast.Id % 2 == 0 ? "even" : "odd")">@forecast.Summary - @forecast.TemperatureC </p>
+		</ItemContent>
+		<Placeholder>
+			<p>Loading...</p>
+		</Placeholder>
+	</Virtualize>
+</div>
+
+@code {
+
+	private int _Count = 25;
+	private int _Batch = 4;
+
+	private WeatherForecast[]? forecasts;
+
+	protected override async Task OnInitializedAsync()
+	{
+		forecasts = await ForecastService.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now), _Count);
+	}
+
+	private async ValueTask<ItemsProviderResult<WeatherForecast>> LoadForecasts(ItemsProviderRequest request)
+	{
+		var forecast = await ForecastService.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now), _Batch, request.CancellationToken);
+
+		return new ItemsProviderResult<WeatherForecast>(forecast, _Count);
+	}
+}
